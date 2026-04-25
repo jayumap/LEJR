@@ -33,9 +33,9 @@ export default function Home() {
         <button
           onClick={handleSync}
           disabled={syncing}
-          style={{ 
-            marginTop: "20px", 
-            padding: "12px 24px", 
+          style={{
+            marginTop: "20px",
+            padding: "12px 24px",
             fontSize: "16px",
             cursor: syncing ? "not-allowed" : "pointer",
             background: syncing ? "#ccc" : "#0070f3",
@@ -48,9 +48,9 @@ export default function Home() {
         </button>
 
         {result && (
-          <div style={{ 
-            marginTop: "20px", 
-            padding: "16px", 
+          <div style={{
+            marginTop: "20px",
+            padding: "16px",
             background: result.error ? "#fee" : "#efe",
             borderRadius: "6px"
           }}>
@@ -68,11 +68,31 @@ export default function Home() {
           </div>
         )}
 
+        {result?.sheetUrl && (
+          <a
+            href={result.sheetUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: "inline-block",
+              marginTop: "12px",
+              padding: "10px 20px",
+              background: "#1a73e8",
+              color: "white",
+              borderRadius: "6px",
+              textDecoration: "none",
+              fontWeight: "bold"
+            }}
+          >
+            📊 Open Your Google Sheet →
+          </a>
+        )}
+
         <br />
         <button onClick={() => signOut()} style={{ marginTop: "16px" }}>
           Sign Out
         </button>
-      </div>
+      </div >
     );
   }
 
@@ -81,7 +101,7 @@ export default function Home() {
       <h1>MF Tracker</h1>
       <p>Connect your Gmail to auto-track mutual fund transactions.</p>
       <p style={{ fontSize: "13px", color: "#666" }}>
-        We only read emails matching mutual fund keywords. 
+        We only read emails matching mutual fund keywords.
         Your data stays in your Google Drive. We never store your emails.
       </p>
       <button

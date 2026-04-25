@@ -7,8 +7,10 @@ import {
     saveTransaction,
     getExistingMessageIds,
     createSyncLog,
-    updateSyncLog
+    updateSyncLog,
+    query
 } from "@/lib/db";
+import { createUserSheet, writeTransactionsToSheet } from "@/lib/sheets";
 
 export async function POST(request) {
     // Check user is logged in
@@ -80,13 +82,40 @@ export async function POST(request) {
             existingIds.add(email.messageId);
         }
 
+        // Create sheet if user doesn't have one yet
+        if (!user.sheet_id) {
+            console.log("📊 Creating Google Sheet for user...");
+            const sheetId = await createUserSheet(
+                user.access_token,
+                user.refresh_token,
+                user.email
+            );
+            // Save sheet ID to user record
+            await query(
+                "UPDATE users SET sheet_id = $1 WHERE id = $2",
+                [sheetId, user.id]
+            );
+            user.sheet_id = sheetId;
+            console.log(`✅ Sheet created and saved: ${sheetId}`);
+        }
+
+        // Write all transactions to sheet
+        console.log("📝 Writing transactions to sheet...");
+        const sheetResult = await writeTransactionsToSheet(
+            user.access_token,
+            user.refresh_token,
+            user.sheet_id,
+            user.id
+        );
+
         await updateSyncLog(logId, "done", emails.length, newCount + reviewCount);
 
         return Response.json({
             success: true,
             emailsScanned: emails.length,
             transactionsSaved: newCount,
-            needsReview: reviewCount
+            needsReview: reviewCount,
+            sheetUrl: `https://docs.google.com/spreadsheets/d/${user.sheet_id}`
         });
 
     } catch (error) {
