@@ -1,115 +1,56 @@
 "use client";
-import { useSession, signIn, signOut } from "next-auth/react";
-import { useState } from "react";
+
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import HeroSection from "./components/landing/HeroSection";
+import HowItWorks from "./components/landing/HowItWorks";
+import TrustBadges from "./components/landing/TrustBadges";
 
 export default function Home() {
   const { data: session, status } = useSession();
-  const [syncing, setSyncing] = useState(false);
-  const [result, setResult] = useState(null);
+  const router = useRouter();
 
-  async function handleSync() {
-    setSyncing(true);
-    setResult(null);
-    try {
-      const res = await fetch("/api/sync/trigger", { method: "POST" });
-      const data = await res.json();
-      setResult(data);
-    } catch (e) {
-      setResult({ error: e.message });
-    } finally {
-      setSyncing(false);
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (session) {
+      router.replace("/dashboard");
     }
-  }
+  }, [session, router]);
 
-  if (status === "loading") {
-    return <div style={{ padding: "40px" }}>Loading...</div>;
-  }
-
-  if (session) {
+  // Loading state
+  if (status === "loading" || session) {
     return (
-      <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
-        <h2>✅ Signed in as {session.user.email}</h2>
-
-        <button
-          onClick={handleSync}
-          disabled={syncing}
-          style={{
-            marginTop: "20px",
-            padding: "12px 24px",
-            fontSize: "16px",
-            cursor: syncing ? "not-allowed" : "pointer",
-            background: syncing ? "#ccc" : "#0070f3",
-            color: "white",
-            border: "none",
-            borderRadius: "6px"
-          }}
-        >
-          {syncing ? "Scanning your emails..." : "Sync Mutual Fund Emails"}
-        </button>
-
-        {result && (
-          <div style={{
-            marginTop: "20px",
-            padding: "16px",
-            background: result.error ? "#fee" : "#efe",
-            borderRadius: "6px"
-          }}>
-            {result.error ? (
-              <p>❌ Error: {result.error}</p>
-            ) : (
-              <>
-                <p>✅ Scanned {result.emailsScanned} emails</p>
-                <p>💾 Saved {result.transactionsSaved} transactions</p>
-                {result.needsReview > 0 && (
-                  <p>⚠️ {result.needsReview} need review (low confidence)</p>
-                )}
-              </>
-            )}
-          </div>
-        )}
-
-        {result?.sheetUrl && (
-          <a
-            href={result.sheetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "inline-block",
-              marginTop: "12px",
-              padding: "10px 20px",
-              background: "#1a73e8",
-              color: "white",
-              borderRadius: "6px",
-              textDecoration: "none",
-              fontWeight: "bold"
-            }}
-          >
-            📊 Open Your Google Sheet →
-          </a>
-        )}
-
-        <br />
-        <button onClick={() => signOut()} style={{ marginTop: "16px" }}>
-          Sign Out
-        </button>
-      </div >
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl font-bold text-text-primary tracking-tight">
+            LEJR
+          </span>
+          <span className="w-2 h-2 bg-accent rounded-full spinner" />
+        </div>
+      </div>
     );
   }
 
   return (
-    <div style={{ padding: "40px", fontFamily: "sans-serif" }}>
-      <h1>MF Tracker</h1>
-      <p>Connect your Gmail to auto-track mutual fund transactions.</p>
-      <p style={{ fontSize: "13px", color: "#666" }}>
-        We only read emails matching mutual fund keywords.
-        Your data stays in your Google Drive. We never store your emails.
-      </p>
-      <button
-        onClick={() => signIn("google")}
-        style={{ marginTop: "16px", padding: "10px 20px", cursor: "pointer" }}
-      >
-        Sign in with Google
-      </button>
+    <div className="min-h-screen">
+      {/* Hero */}
+      <HeroSection />
+
+      {/* How it Works */}
+      <HowItWorks />
+
+      {/* Trust Section */}
+      <TrustBadges />
+
+      {/* Footer */}
+      <footer className="border-t border-border-primary px-6 py-8 text-center">
+        <p className="text-text-tertiary text-xs">
+          LEJR — Built for tracking SIP investments.
+          <br />
+          Your emails are never stored. All data stays in your Google Drive.
+        </p>
+      </footer>
     </div>
   );
 }

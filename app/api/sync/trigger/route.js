@@ -26,6 +26,8 @@ export async function POST(request) {
 
     const logId = await createSyncLog(user.id);
 
+    console.log(`[sync] triggered by: ${session?.user?.email} at ${new Date().toISOString()}`);
+
     try {
         // Step 1 — Scan Gmail
         const emails = await scanEmails(
